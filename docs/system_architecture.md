@@ -1,8 +1,8 @@
-# 🏗️ System Architecture - MediSentinel
+# 🏗️ System Architecture - EmergiSphere
 
 ## 📋 Architecture Overview
 
-MediSentinel follows a microservices-based architecture with AI agents as the core components. The system is designed for high availability, scalability, and compliance with healthcare regulations.
+EmergiSphere follows a microservices-based architecture with AI agents as the core components. The system is designed for high availability, scalability, and compliance with healthcare regulations, focusing on emergency-first hospital automation.
 
 ## 🏛️ High-Level Architecture
 
@@ -34,8 +34,8 @@ MediSentinel follows a microservices-based architecture with AI agents as the co
 │  Triage Agent    │  Admission Agent │  Billing Agent    │  Legal Agent         │
 │  (Python/LLM)    │  (Python/OCR)    │  (Python/Stripe)  │  (Python/APIs)      │
 │                                                                                 │
-│  Scheduling Agent│  Medical Records │  Communication    │  Agent Coordinator   │
-│  (Python/Calendar)│  Agent (Python)  │  Agent (Python)   │  (Python/LangChain) │
+│  Scheduling Agent│  Medical Records │  Communication    │  Smart Health Device │
+│  (Python/Calendar)│  Agent (Python)  │  Agent (Python)   │  Agent (Python)     │
 └─────────────────────────────────────────────────────────────────────────────────┘
                                         │
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -118,6 +118,12 @@ Emergency Input (Voice/Text/Photo)
           │
           ▼
 ┌─────────────────┐
+│ Smart Health    │ ← Access device data & vitals
+│ Device Agent    │
+└─────────┬───────┘
+          │
+          ▼
+┌─────────────────┐
 │ Billing Agent   │ ← Estimate costs & insurance
 └─────────┬───────┘
           │
@@ -144,12 +150,18 @@ Appointment Request
           │
           ▼
 ┌─────────────────┐
+│  Triage Agent   │ ← Assess patient condition
+└─────────┬───────┘
+          │
+          ▼
+┌─────────────────┐
 │ Medical Records │ ← Check history & preferences
 └─────────┬───────┘
           │
           ▼
 ┌─────────────────┐
-│ Scheduling Agent│ ← Find available slots
+│ Smart Health    │ ← Access device data
+│ Device Agent    │
 └─────────┬───────┘
           │
           ▼
@@ -159,7 +171,34 @@ Appointment Request
           │
           ▼
 ┌─────────────────┐
+│ Scheduling Agent│ ← Find available slots
+└─────────┬───────┘
+          │
+          ▼
+┌─────────────────┐
 │ Communication   │ ← Send confirmation
+└─────────────────┘
+```
+
+### 3. Smart Health Device Flow
+
+```
+Device Scan/Registration
+         │
+         ▼
+┌─────────────────┐
+│ Smart Health    │ ← Device authentication
+│ Device Agent    │
+└─────────┬───────┘
+          │
+          ▼
+┌─────────────────┐
+│ Medical Records │ ← Store/retrieve reports
+└─────────┬───────┘
+          │
+          ▼
+┌─────────────────┐
+│ Communication   │ ← Emergency notifications
 └─────────────────┘
 ```
 
@@ -270,6 +309,20 @@ CREATE TABLE billing (
   sent_at: Date,
   delivered_at: Date
 }
+
+// Smart device data collection
+{
+  _id: ObjectId,
+  device_id: String,
+  patient_id: String,
+  device_type: String,
+  vital_signs: Object,
+  medical_reports: [Object],
+  emergency_contacts: [Object],
+  last_sync: Date,
+  battery_level: Number,
+  is_connected: Boolean
+}
 ```
 
 ## 🔐 Security Architecture
@@ -332,36 +385,106 @@ CREATE TABLE billing (
 # docker-compose.yml
 version: '3.8'
 services:
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      
-  backend:
-    build: ./backend
+  # Main application
+  medisentinel:
+    build: .
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://user:pass@db:5432/medisentinel
+      - DATABASE_URL=postgresql://medisentinel:password@db:5432/medisentinel
+      - REDIS_URL=redis://redis:6379
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
     depends_on:
       - db
       - redis
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
       
+  # PostgreSQL database
   db:
     image: postgres:15
     environment:
       - POSTGRES_DB=medisentinel
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=pass
+      - POSTGRES_USER=medisentinel
+      - POSTGRES_PASSWORD=password
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
       
+  # Redis for caching and session management
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+      
+  # MongoDB for document storage
+  mongodb:
+    image: mongo:6
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=medisentinel
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    restart: unless-stopped
+      
+  # Elasticsearch for logging and search
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    restart: unless-stopped
+      
+  # Kibana for log visualization
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+      
+  # Prometheus for metrics
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    restart: unless-stopped
+      
+  # Grafana for dashboards
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: unless-stopped
 ```
 
 ### Production Environment
@@ -371,20 +494,20 @@ services:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: medisentinel-backend
+  name: emergisphere-backend
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: medisentinel-backend
+      app: emergisphere-backend
   template:
     metadata:
       labels:
-        app: medisentinel-backend
+        app: emergisphere-backend
     spec:
       containers:
       - name: backend
-        image: medisentinel/backend:latest
+        image: emergisphere/backend:latest
         ports:
         - containerPort: 8000
         env:
@@ -415,40 +538,69 @@ spec:
 ```python
 # FastAPI application structure
 from fastapi import FastAPI, Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer
 
-app = FastAPI(title="MediSentinel API", version="1.0.0")
+app = FastAPI(title="EmergiSphere API", version="1.0.0")
 
 # Authentication middleware
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = HTTPBearer()
 
-# Patient endpoints
-@app.post("/patients/")
-async def create_patient(patient: PatientCreate, token: str = Depends(oauth2_scheme)):
-    return await patient_service.create(patient)
+# Health check endpoints
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "EmergiSphere", "version": "1.0.0"}
 
-@app.get("/patients/{patient_id}")
-async def get_patient(patient_id: str, token: str = Depends(oauth2_scheme)):
-    return await patient_service.get(patient_id)
+@app.get("/health/agents")
+async def agent_health_check(orchestrator: AgentOrchestrator = Depends(get_orchestrator)):
+    return await orchestrator.get_agent_health()
 
-# Emergency endpoints
+# Emergency workflow endpoints
 @app.post("/emergency/triage")
-async def emergency_triage(triage_data: TriageInput):
-    return await triage_agent.process(triage_data)
+async def emergency_triage(emergency_input: EmergencyInput):
+    return await orchestrator.start_workflow("emergency", emergency_input.dict())
 
-@app.post("/emergency/admission")
-async def emergency_admission(admission_data: AdmissionInput):
-    return await admission_agent.process(admission_data)
+@app.post("/emergency/override/{session_id}")
+async def emergency_override(session_id: str, override_data: Dict[str, Any]):
+    return await orchestrator.emergency_override(session_id, override_data)
 
-# Appointment endpoints
-@app.post("/appointments/")
-async def create_appointment(appointment: AppointmentCreate):
-    return await scheduling_agent.book_appointment(appointment)
+# Regular appointment endpoints
+@app.post("/appointments/schedule")
+async def schedule_appointment(appointment_input: AppointmentInput):
+    return await orchestrator.start_workflow("regular", appointment_input.dict())
 
-# Billing endpoints
-@app.post("/billing/estimate")
-async def estimate_billing(billing_data: BillingInput):
-    return await billing_agent.estimate(billing_data)
+# Workflow management endpoints
+@app.get("/workflow/{session_id}")
+async def get_workflow_status(session_id: str):
+    return await orchestrator.get_workflow_status(session_id)
+
+@app.post("/workflow/{session_id}/complete")
+async def complete_workflow(session_id: str):
+    return await orchestrator.complete_workflow(session_id)
+```
+
+### Smart Health Device API
+
+```python
+# Smart Health Device API endpoints
+@app.post("/devices/register")
+async def register_device(request: DeviceRegistrationRequest):
+    return await smart_device_agent.register_device(request)
+
+@app.post("/devices/scan")
+async def scan_device(request: DeviceScanRequest):
+    return await smart_device_agent.scan_device(request)
+
+@app.post("/devices/{device_id}/reports")
+async def store_medical_report(device_id: str, request: MedicalReportRequest):
+    return await smart_device_agent.store_medical_report(request)
+
+@app.get("/devices/{device_id}/vital-signs")
+async def get_vital_signs(device_id: str):
+    return await smart_device_agent.get_vital_signs(device_id)
+
+@app.post("/devices/{device_id}/emergency-check")
+async def check_emergency_conditions(device_id: str):
+    return await smart_device_agent.check_emergency_conditions(device_id)
 ```
 
 ### WebSocket API for Real-time Updates
@@ -465,6 +617,79 @@ async def websocket_endpoint(websocket: WebSocket, patient_id: str):
             await asyncio.sleep(30)  # Update every 30 seconds
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected for patient {patient_id}")
+```
+
+## 🤖 Agent Architecture
+
+### Base Agent Class
+
+```python
+class BaseAgent(ABC):
+    """Base class for all EmergiSphere AI agents."""
+    
+    def __init__(self):
+        self.agent_name = self.__class__.__name__
+        self.logger = logging.getLogger(f"agent.{self.agent_name.lower()}")
+        self.is_healthy = True
+        self.last_health_check = datetime.utcnow()
+    
+    @abstractmethod
+    async def process(self, context: Any) -> Dict[str, Any]:
+        """Process the main agent logic."""
+        pass
+    
+    async def health_check(self) -> bool:
+        """Check if the agent is healthy."""
+        pass
+    
+    async def emergency_process(self, context: Any, override_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle emergency processing when normal workflow is bypassed."""
+        pass
+    
+    async def shutdown(self):
+        """Gracefully shutdown the agent."""
+        pass
+```
+
+### Agent Orchestrator
+
+```python
+class AgentOrchestrator:
+    """Central coordinator for all EmergiSphere AI agents."""
+    
+    def __init__(self):
+        self.agents = {
+            'triage': TriageAgent(),
+            'admission': AdmissionAgent(),
+            'billing': BillingAgent(),
+            'legal': LegalAgent(),
+            'scheduling': SchedulingAgent(),
+            'medical_records': MedicalRecordsAgent(),
+            'communication': CommunicationAgent(),
+            'smart_health_device': SmartHealthDeviceAgent()
+        }
+        
+        self.active_sessions: Dict[str, WorkflowContext] = {}
+        self.workflow_definitions = self._define_workflows()
+    
+    def _define_workflows(self) -> Dict[str, List[str]]:
+        """Define the sequence of agents for different workflow types."""
+        return {
+            'emergency': [
+                'triage', 'admission', 'legal', 'medical_records',
+                'smart_health_device', 'billing', 'communication', 'scheduling'
+            ],
+            'regular': [
+                'admission', 'triage', 'medical_records', 'smart_health_device',
+                'billing', 'scheduling', 'communication'
+            ],
+            'device_scan': [
+                'smart_health_device', 'medical_records', 'communication'
+            ],
+            'emergency_device': [
+                'smart_health_device', 'triage', 'communication', 'admission'
+            ]
+        }
 ```
 
 ## 📈 Scalability Considerations

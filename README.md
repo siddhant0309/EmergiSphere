@@ -1,8 +1,8 @@
-# 🚑 MediSentinel: Agentic AI for Emergency-First Hospital Automation
+# 🚑 EmergiSphere: Agentic AI for Emergency-First Hospital Automation
 
 ## 🎯 Project Overview
 
-MediSentinel is a multi-agent AI system that automates emergency hospital workflows by intelligently coordinating patient intake, billing, legal communication, and medical record management. The system uses autonomous AI agents to handle complex hospital operations, reducing manual paperwork and improving emergency response times.
+EmergiSphere is a multi-agent AI system that automates emergency hospital workflows by intelligently coordinating patient intake, billing, legal communication, and medical record management. The system uses autonomous AI agents to handle complex hospital operations, reducing manual paperwork and improving emergency response times.
 
 ## 🧠 Core Features
 
@@ -12,6 +12,7 @@ MediSentinel is a multi-agent AI system that automates emergency hospital workfl
 - **Paperless Billing**: Automated insurance validation and billing processes
 - **Smart Scheduling**: AI-driven appointment booking and follow-up management
 - **Real-time Communication**: Automated notifications to family, staff, and authorities
+- **Smart Health Device Integration**: Medical reports on smartwatches, doctor scanning, emergency contact notification
 
 ## 🏗️ System Architecture
 
@@ -27,7 +28,7 @@ MediSentinel is a multi-agent AI system that automates emergency hospital workfl
 ├─────────────────────────────────────────────────────────────────┤
 │  Triage Agent   │  Admission Agent  │  Billing Agent           │
 │  Legal Agent    │  Scheduling Agent │  Medical Records Agent   │
-│  Communication Agent                                            │
+│  Communication Agent│  Smart Health Device Agent                │
 └─────────────────────────────────────────────────────────────────┘
                                 │
 ┌─────────────────────────────────────────────────────────────────┐
@@ -58,7 +59,7 @@ MediSentinel is a multi-agent AI system that automates emergency hospital workfl
 1. **Clone the repository**
 ```bash
 git clone <repository-url>
-cd MediSentinel
+cd EmergiSphere
 ```
 
 2. **Set up Python environment**
@@ -84,10 +85,20 @@ python scripts/init_db.py
 python app.py
 ```
 
+6. **Start Smart Health Device API (optional)**
+```bash
+python smart_health_api.py
+```
+
+7. **Run Smart Health Device Demo**
+```bash
+python smart_health_demo.py
+```
+
 ## 📁 Project Structure
 
 ```
-MediSentinel/
+EmergiSphere/
 ├── agents/                 # AI Agent implementations
 │   ├── triage_agent.py
 │   ├── admission_agent.py
@@ -95,7 +106,8 @@ MediSentinel/
 │   ├── legal_agent.py
 │   ├── scheduling_agent.py
 │   ├── medical_records_agent.py
-│   └── communication_agent.py
+│   ├── communication_agent.py
+│   └── smart_health_device_agent.py
 ├── api/                   # REST API endpoints
 │   ├── routes/
 │   └── middleware/
@@ -115,15 +127,44 @@ MediSentinel/
 └── scripts/               # Setup and utility scripts
 ```
 
-## 🔧 Configuration
+## 🏥 Smart Health Device Features
 
-### Environment Variables
+### Key Capabilities
+- **Medical Report Storage**: Secure storage of lab results, prescriptions, and medical reports on smartwatches
+- **Doctor Device Scanning**: QR code/NFC scanning for immediate patient information access
+- **Emergency Contact Management**: Automated notification system for family and healthcare providers
+- **Vital Signs Monitoring**: Continuous monitoring with automatic emergency detection
+- **Emergency Response**: Automatic activation when critical health thresholds are exceeded
+
+### Smart Health Device API
+The system includes a dedicated API for smart health device operations:
+- Device registration and management
+- Medical report storage and retrieval
+- Vital signs monitoring and emergency detection
+- Emergency contact notification
+- Doctor device scanning and access control
+
+### Getting Started with Smart Health Devices
+```bash
+# Start the Smart Health Device API
+python smart_health_api.py
+
+# Access API documentation
+http://localhost:8001/docs
+
+# Run demonstration
+python smart_health_demo.py
+```
+
+For detailed documentation, see [Smart Health Device Integration](docs/smart_health_device_integration.md).
+
+## 🔧 Configuration
 ```bash
 # OpenAI Configuration
 OPENAI_API_KEY=your_openai_api_key
 
 # Database Configuration
-DATABASE_URL=postgresql://user:password@localhost/medisentinel
+DATABASE_URL=postgresql://user:password@localhost/emergisphere
 
 # External APIs
 TWILIO_ACCOUNT_SID=your_twilio_sid

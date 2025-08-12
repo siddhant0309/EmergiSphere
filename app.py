@@ -1,7 +1,7 @@
 """
-MediSentinel Main Application
+EmergiSphere Main Application
 
-FastAPI application for the MediSentinel hospital automation system.
+FastAPI application for the EmergiSphere hospital automation system.
 """
 
 import logging
@@ -58,7 +58,7 @@ class WorkflowStatus(BaseModel):
 async def lifespan(app: FastAPI):
     """Manage application startup and shutdown."""
     # Startup
-    logger.info("Starting MediSentinel application...")
+    logger.info("Starting EmergiSphere application...")
     
     # Initialize orchestrator
     orchestrator = await get_orchestrator()
@@ -66,12 +66,12 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
-    logger.info("Shutting down MediSentinel application...")
+    logger.info("Shutting down EmergiSphere application...")
     await orchestrator.shutdown()
 
 # Create FastAPI app
 app = FastAPI(
-    title="MediSentinel API",
+    title="EmergiSphere API",
     description="Agentic AI for Emergency-First Hospital Automation",
     version="1.0.0",
     lifespan=lifespan
@@ -92,7 +92,7 @@ async def health_check():
     """Health check endpoint."""
     return {
         "status": "healthy",
-        "service": "MediSentinel",
+        "service": "EmergiSphere",
         "version": "1.0.0"
     }
 

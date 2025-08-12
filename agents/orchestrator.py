@@ -23,6 +23,7 @@ from .legal_agent import LegalAgent
 from .scheduling_agent import SchedulingAgent
 from .medical_records_agent import MedicalRecordsAgent
 from .communication_agent import CommunicationAgent
+from .smart_health_device_agent import SmartHealthDeviceAgent
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,8 @@ class AgentOrchestrator:
             'legal': LegalAgent(),
             'scheduling': SchedulingAgent(),
             'medical_records': MedicalRecordsAgent(),
-            'communication': CommunicationAgent()
+            'communication': CommunicationAgent(),
+            'smart_health_device': SmartHealthDeviceAgent()
         }
         
         self.active_sessions: Dict[str, WorkflowContext] = {}
@@ -69,6 +71,7 @@ class AgentOrchestrator:
                 'admission', 
                 'legal',
                 'medical_records',
+                'smart_health_device',
                 'billing',
                 'communication',
                 'scheduling'
@@ -77,9 +80,21 @@ class AgentOrchestrator:
                 'admission',
                 'triage',
                 'medical_records',
+                'smart_health_device',
                 'billing',
                 'scheduling',
                 'communication'
+            ],
+            'device_scan': [
+                'smart_health_device',
+                'medical_records',
+                'communication'
+            ],
+            'emergency_device': [
+                'smart_health_device',
+                'triage',
+                'communication',
+                'admission'
             ]
         }
     

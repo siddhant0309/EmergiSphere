@@ -1,13 +1,13 @@
-# 🚑 MediSentinel: Complete Project Summary
+# 🚑 EmergiSphere: Complete Project Summary
 
 ## 🎯 Project Overview
 
-**MediSentinel** is a comprehensive Agentic AI-powered hospital automation system designed to revolutionize emergency patient care, appointment scheduling, billing, and legal coordination. The system uses autonomous AI agents to handle complex hospital workflows, reducing manual paperwork and improving emergency response times.
+**EmergiSphere** is a comprehensive Agentic AI-powered hospital automation system designed to revolutionize emergency patient care, appointment scheduling, billing, and legal coordination. The system uses autonomous AI agents to handle complex hospital workflows, reducing manual paperwork and improving emergency response times.
 
 ## 🧠 Core Innovation
 
 ### Agentic AI Architecture
-MediSentinel implements a **multi-agent AI system** where each agent operates autonomously with specific responsibilities:
+EmergiSphere implements a **multi-agent AI system** where each agent operates autonomously with specific responsibilities:
 
 - **Triage Agent**: AI-powered urgency assessment from voice, text, and vital signs
 - **Admission Agent**: Automated patient registration and ID verification
