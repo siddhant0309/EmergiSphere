@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime
 from uuid import uuid4
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from langchain.agents import AgentExecutor
 from langchain.schema import BaseMessage
 from crewai import Crew, Process
@@ -36,7 +36,7 @@ class WorkflowContext(BaseModel):
     workflow_type: str  # "emergency" or "regular"
     created_at: datetime
     updated_at: datetime
-    metadata: Dict[str, Any] = {}
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
 class AgentOrchestrator:
