@@ -1,3 +1,5 @@
+#This project was Also known as Medi Sentinaal chnaged the naame to make it mre catchy
+
 # 🚑 EmergiSphere: Agentic AI for Emergency-First Hospital Automation
 
 ## 🎯 Project Overview
